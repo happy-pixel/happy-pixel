@@ -94,6 +94,7 @@ class Tree():
 
 
     def create_composite_image(self):
+        global final
         files = {}
         temp = {}
         count = 0
@@ -126,7 +127,7 @@ class Tree():
                 temp.clear()
             count += 1
         self.merge_pairs(
-            1,
+            2,
             files['pair_0'],
             files['pair_0'],
             temp, i
@@ -212,10 +213,58 @@ class Tree():
             temp[pair_index] = im
         elif save == 1:
             im.save('{}_pair_{}.png'.format(self.name, pair_count))
+        elif save == 2:
+            pair_index = "{}".format(self.name)
+            final[pair_index] = im
         return temp
 
 
 
+def deleteTxt():
+    for file in glob.glob("*.txt"):
+        if os.path.isfile('{}'.format(file)):
+            os.remove('{}'.format(file))
+        else:
+            print("Error: {} file not found".format(file))
+
+
+def mergeFinal(
+    file_1, file_2, temp={}):
+    """Merge two images into one, displayed side by side
+        :param:     file1    path to first image file
+        :param:     file2    path to second image file
+        :return:             the merged Image object
+    """
+    size = file_1.width
+    flipped = file_2.transpose(Image.FLIP_LEFT_RIGHT)
+    im = Image.new(
+        'RGB', ((size * 2), (size * 2))
+        )
+
+    im.paste(
+        im = file_1, box = (0, 0)
+        )
+    im.paste(
+        im = flipped, box = (size, 0)
+        )
+    im.paste(
+        im = flipped, box = (0, size)
+        )
+    im.paste(
+        im = file_1, box = (size, size)
+        )
+    im.save('final.png')
+
+def compressResize(file, iter):
+    size = iter + 1
+    compressed = file.resize((size,size))
+    resize = compressed.resize((1024,1024))
+    resize.save('{}.png'.format(size))
+
+
+deleteTxt()
+
+final = {}
 
 hue = []
 for i in range(90):
@@ -223,7 +272,7 @@ for i in range(90):
 hue_len = len(hue)
 
 depth_input = int(input('Depth?\n: '))
-slave_depth = 9
+slave_depth = 10
 master_depth = (depth_input - slave_depth)
 interval_input = int(input('Interval?\n: '))
 
@@ -255,10 +304,8 @@ for i in range(len(master.storage)):
     slaves[key] = value
 
 print(slaves)
+#mergeFinal(final['slave_0'], final['slave_1'])
+for i in range(1024):
+    compressResize(final['slave_0'], i)
 
-
-for file in glob.glob("*.txt"):
-    if os.path.isfile('{}'.format(file)):
-        os.remove('{}'.format(file))
-    else:
-        print("Error: {} file not found".format(file))
+deleteTxt()
